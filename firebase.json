@@ -1,0 +1,115 @@
+{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22"
+  },
+  "hosting": {
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/chat",
+        "function": "chat"
+      },
+      {
+        "source": "/api/chatStream",
+        "function": "chatStreamV2"
+      },
+      {
+        "source": "/api/analyzeHairQuick",
+        "function": "analyzeHairQuick"
+      },
+      {
+        "source": "/api/analyzeHairFull",
+        "function": "analyzeHairFull"
+      },
+      {
+        "source": "/api/getSharedAnalysis",
+        "function": "getSharedAnalysis"
+      },
+      {
+        "source": "/api/getUserProfile",
+        "function": "getUserProfile"
+      },
+      {
+        "source": "/api/updateUserProfile",
+        "function": "updateUserProfile"
+      },
+      {
+        "source": "/api/getAnalysisHistory",
+        "function": "getAnalysisHistory"
+      },
+      {
+        "source": "/api/getChatHistory",
+        "function": "getChatHistory"
+      },
+      {
+        "source": "/api/getConfig",
+        "function": "getConfig"
+      },
+      {
+        "source": "/share/**",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/results/**",
+        "destination": "/index.html"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|ico)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "hosting": {
+      "port": 5000
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": true
+    }
+  }
+}

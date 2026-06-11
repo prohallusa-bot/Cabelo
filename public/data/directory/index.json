@@ -1,0 +1,22 @@
+{
+  "cities": [
+    {
+      "name": "Belém",
+      "slug": "belem",
+      "state": "Pará",
+      "totalCount": 2647,
+      "salonsCount": 1844,
+      "professionalsCount": 803
+    },
+    {
+      "name": "São Paulo",
+      "slug": "sao-paulo",
+      "state": "São Paulo",
+      "totalCount": 2000,
+      "salonsCount": 1028,
+      "professionalsCount": 972
+    }
+  ],
+  "totalListings": 4647,
+  "lastUpdated": "2026-01-16T11:12:25.304Z"
+}

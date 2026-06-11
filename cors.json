@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://cabelo.ai", "https://*.cabelo.ai", "http://localhost:*", "http://127.0.0.1:*"],
+    "responseHeader": ["Content-Type", "Content-Length", "Content-Range", "Accept-Ranges", "x-goog-resumable"],
+    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+    "maxAgeSeconds": 3600
+  }
+]

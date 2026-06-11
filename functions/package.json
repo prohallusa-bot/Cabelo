@@ -1,0 +1,25 @@
+{
+  "name": "cabelo-ai-functions",
+  "version": "2.0.0",
+  "description": "Cabelo.AI Cloud Functions with Vertex AI RAG",
+  "main": "index.js",
+  "engines": {
+    "node": "18"
+  },
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "@google-cloud/aiplatform": "^3.10.0",
+    "@google-cloud/storage": "^7.18.0",
+    "@google-cloud/vertexai": "^1.9.0",
+    "@google/generative-ai": "^0.21.0",
+    "cors": "^2.8.5",
+    "firebase-admin": "^11.11.0",
+    "firebase-functions": "^4.5.0",
+    "google-auth-library": "^9.0.0"
+  }
+}

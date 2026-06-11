@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# Service account keys (sensitive!)
+service-account.json
+*.json.bak
+
+# Local environment
+.env
+.env.local

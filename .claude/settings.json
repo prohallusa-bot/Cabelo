@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -is -X OPTIONS \"https://us-central1-cosmeticos-ai.cloudfunctions.net/chatStreamV2\" -H \"Origin: http://localhost:5173\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: content-type\" --max-time 15)",
+      "Bash(curl -is -X POST \"https://us-central1-cosmeticos-ai.cloudfunctions.net/chatStreamV2\" -H \"Origin: http://localhost:5173\" -H \"Content-Type: application/json\" --max-time 30 -d '{\"message\":\"How do I reduce frizz in humid weather?\",\"images\":[],\"conversationId\":{\"chatHistory\":[],\"userProfile\":null,\"images\":[],\"userId\":null,\"isGuest\":true,\"conversationId\":null},\"isGuest\":true,\"userProfile\":null}')",
+      "Bash(curl -s -X POST \"https://us-central1-cosmeticos-ai.cloudfunctions.net/chatStreamV2\" -H \"Origin: http://localhost:5173\" -H \"Content-Type: application/json\" --max-time 25 -d '{\"message\":\"How do I reduce frizz in humid weather?\",\"isGuest\":true,\"images\":[]}')"
+    ]
+  }
+}

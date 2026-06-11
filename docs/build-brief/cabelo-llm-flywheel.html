@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cabelo.ai — LLM Mention Flywheel &amp; Stickiness Scorecard</title>
+<style>
+  :root {
+    --text: #2C2C2A;
+    --muted: #5F5E5A;
+    --hint: #888780;
+    --bg: #FFFFFF;
+    --surface: #F1EFE8;
+    --purple: #534AB7;
+    --amber: #BA7517;
+    --gray: #888780;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    margin: 0;
+    padding: 40px 20px;
+    line-height: 1.7;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 600; margin: 0 0 8px; }
+  h2 { font-size: 18px; font-weight: 600; margin: 40px 0 12px; }
+  p { font-size: 15px; color: var(--muted); margin: 0 0 16px; }
+  .card {
+    border: 1px solid #E3E1D8;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0 32px;
+    background: var(--bg);
+  }
+  .legend { display: flex; gap: 16px; margin-bottom: 16px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .bar-row { margin-bottom: 16px; }
+  .bar-head { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .bar-head .name { font-weight: 500; color: var(--text); }
+  .bar-head .score { font-weight: 600; }
+  .bar-track { height: 10px; background: var(--surface); border-radius: 5px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 5px; }
+  .bar-note { font-size: 12px; color: var(--hint); margin-top: 3px; }
+  .takeaway {
+    border-left: 3px solid var(--purple);
+    padding: 4px 0 4px 16px;
+    margin: 24px 0;
+  }
+  .takeaway p { color: var(--text); }
+  svg text { font-family: inherit; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Cabelo.ai — LLM mention flywheel</h1>
+  <p>How data goes in, how AI mentions come out, and how that feeds back. Read top to bottom: real expertise and real results go in, only distilled answers go public, AI engines pick those up, and every mention recruits the next round of contributors. Each turn of the loop makes the next one stronger.</p>
+
+  <div class="card">
+  <svg width="100%" viewBox="0 0 680 560" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>Cabelo LLM mention flywheel</title>
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+
+    <!-- Inputs -->
+    <g>
+      <rect x="70" y="40" width="250" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+      <text x="195" y="62" text-anchor="middle" font-size="14" font-weight="600" fill="#085041">Stylists record answers</text>
+      <text x="195" y="82" text-anchor="middle" font-size="12" fill="#0F6E56">Voice, real chair experience</text>
+    </g>
+    <g>
+      <rect x="360" y="40" width="250" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+      <text x="485" y="62" text-anchor="middle" font-size="14" font-weight="600" fill="#085041">Clients send photos</text>
+      <text x="485" y="82" text-anchor="middle" font-size="12" fill="#0F6E56">Check-ins, real results</text>
+    </g>
+
+    <line x1="195" y1="96" x2="280" y2="140" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="485" y1="96" x2="400" y2="140" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- Private KB -->
+    <g>
+      <rect x="170" y="150" width="340" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+      <text x="340" y="172" text-anchor="middle" font-size="14" font-weight="600" fill="#3C3489">Private knowledge base</text>
+      <text x="340" y="192" text-anchor="middle" font-size="12" fill="#534AB7">The moat — stays locked</text>
+    </g>
+
+    <line x1="340" y1="206" x2="340" y2="248" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="358" y="232" font-size="12" fill="#888780">distilled, not raw</text>
+
+    <!-- Public layer -->
+    <g>
+      <rect x="60" y="258" width="560" height="118" rx="14" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+      <text x="340" y="284" text-anchor="middle" font-size="14" font-weight="600" fill="#712B13">Public layer — the bait</text>
+    </g>
+    <g>
+      <rect x="80" y="300" width="160" height="56" rx="8" fill="#FFFFFF" stroke="#993C1D" stroke-width="0.5"/>
+      <text x="160" y="322" text-anchor="middle" font-size="14" font-weight="600" fill="#712B13">Q&amp;A pages</text>
+      <text x="160" y="342" text-anchor="middle" font-size="12" fill="#993C1D">Expert answers</text>
+    </g>
+    <g>
+      <rect x="260" y="300" width="160" height="56" rx="8" fill="#FFFFFF" stroke="#993C1D" stroke-width="0.5"/>
+      <text x="340" y="322" text-anchor="middle" font-size="14" font-weight="600" fill="#712B13">Original stats</text>
+      <text x="340" y="342" text-anchor="middle" font-size="12" fill="#993C1D">Outcome data</text>
+    </g>
+    <g>
+      <rect x="440" y="300" width="160" height="56" rx="8" fill="#FFFFFF" stroke="#993C1D" stroke-width="0.5"/>
+      <text x="520" y="322" text-anchor="middle" font-size="14" font-weight="600" fill="#712B13">Stylist profiles</text>
+      <text x="520" y="342" text-anchor="middle" font-size="12" fill="#993C1D">Named experts</text>
+    </g>
+
+    <line x1="340" y1="376" x2="340" y2="418" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- LLMs -->
+    <g>
+      <rect x="170" y="428" width="340" height="56" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+      <text x="340" y="450" text-anchor="middle" font-size="14" font-weight="600" fill="#0C447C">LLMs crawl and learn</text>
+      <text x="340" y="470" text-anchor="middle" font-size="12" fill="#185FA5">ChatGPT, Gemini, Perplexity</text>
+    </g>
+
+    <line x1="340" y1="484" x2="340" y2="510" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- Mentions -->
+    <g>
+      <rect x="150" y="514" width="380" height="36" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+      <text x="340" y="537" text-anchor="middle" font-size="14" font-weight="600" fill="#27500A">AI mentions you → new clients + stylists</text>
+    </g>
+    <text x="548" y="537" font-size="12" fill="#888780">↻ back to top</text>
+  </svg>
+  </div>
+
+  <h2>Money loop + viral loop</h2>
+  <p>The first chart is the data loop. Two more engines run beside it: commissions make stylists <em>push</em> the app, sharing makes clients <em>pull</em> friends in — and both dump new people into the knowledge flywheel.</p>
+
+  <div class="card">
+  <svg width="100%" viewBox="0 0 680 520" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>Money loop and viral loop</title>
+
+    <text x="180" y="36" text-anchor="middle" font-size="14" font-weight="600" fill="#2C2C2A">Money loop</text>
+    <text x="500" y="36" text-anchor="middle" font-size="14" font-weight="600" fill="#2C2C2A">Viral loop</text>
+
+    <!-- Money loop -->
+    <g>
+      <rect x="60" y="54" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+      <text x="180" y="76" text-anchor="middle" font-size="14" font-weight="600" fill="#085041">Stylist prescribes app</text>
+      <text x="180" y="96" text-anchor="middle" font-size="12" fill="#0F6E56">QR + her code, chairside</text>
+    </g>
+    <line x1="180" y1="110" x2="180" y2="150" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <g>
+      <rect x="60" y="158" width="240" height="56" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+      <text x="180" y="180" text-anchor="middle" font-size="14" font-weight="600" fill="#633806">Client buys products</text>
+      <text x="180" y="200" text-anchor="middle" font-size="12" fill="#854F0B">Shopify, code attributed</text>
+    </g>
+    <line x1="180" y1="214" x2="180" y2="254" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <g>
+      <rect x="60" y="262" width="240" height="56" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+      <text x="180" y="284" text-anchor="middle" font-size="14" font-weight="600" fill="#27500A">Commission paid</text>
+      <text x="180" y="304" text-anchor="middle" font-size="12" fill="#3B6D11">Incl. every reorder, forever</text>
+    </g>
+    <text x="180" y="344" text-anchor="middle" font-size="12" fill="#888780">↻ motivates more prescribing</text>
+
+    <!-- Viral loop -->
+    <g>
+      <rect x="380" y="54" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+      <text x="500" y="76" text-anchor="middle" font-size="14" font-weight="600" fill="#085041">Client sees results</text>
+      <text x="500" y="96" text-anchor="middle" font-size="12" fill="#0F6E56">Week 1 vs week 8 photos</text>
+    </g>
+    <line x1="500" y1="110" x2="500" y2="150" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <g>
+      <rect x="380" y="158" width="240" height="56" rx="8" fill="#FBEAF0" stroke="#993556" stroke-width="0.5"/>
+      <text x="500" y="180" text-anchor="middle" font-size="14" font-weight="600" fill="#72243E">Shares hair score</text>
+      <text x="500" y="200" text-anchor="middle" font-size="12" fill="#993556">Before/after + score card</text>
+    </g>
+    <line x1="500" y1="214" x2="500" y2="254" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <g>
+      <rect x="380" y="262" width="240" height="56" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+      <text x="500" y="284" text-anchor="middle" font-size="14" font-weight="600" fill="#27500A">Friends scan their hair</text>
+      <text x="500" y="304" text-anchor="middle" font-size="12" fill="#3B6D11">Give 15% / get 15% referral</text>
+    </g>
+    <text x="500" y="344" text-anchor="middle" font-size="12" fill="#888780">↻ new sharers join</text>
+
+    <line x1="180" y1="352" x2="300" y2="408" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="500" y1="352" x2="380" y2="408" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <g>
+      <rect x="140" y="416" width="400" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+      <text x="340" y="438" text-anchor="middle" font-size="14" font-weight="600" fill="#3C3489">More clients + more stylists</text>
+      <text x="340" y="458" text-anchor="middle" font-size="12" fill="#534AB7">Feeds the knowledge flywheel (chart 1)</text>
+    </g>
+  </svg>
+  </div>
+
+  <h2>Viral mechanics (build order)</h2>
+  <p><strong>1. Before/after is the viral atom.</strong> Week-1 vs week-8 check-in photos auto-assemble into a shareable card with the score improvement ("62 → 84"). The protocol already created the content — the app just asks permission to show it off. One tap to post.</p>
+  <p><strong>2. The score is an identity badge.</strong> High scores share as a flex; low scores share as a journey-start ("Day 1: 58. Watch this space."). Design the card for both, or half the users have nothing to post.</p>
+  <p><strong>3. Referral coupon on the card.</strong> "Give 15% / get 15%" — every share doubles as a discount for the friend. Runs on the same Shopify discount API as the commission codes.</p>
+  <p><strong>4. Stylists are multipliers.</strong> Each stylist posting client transformations (Cabelo card + her citation badge) reaches her own following — the exact audience. Same content feeds her Pelo.hair portfolio.</p>
+  <p><strong>5. AI mentions are the slow burn.</strong> Compounding, permanent, free.</p>
+  <p><em>Calibration: plan for the loops to lower CAC (referrals −20–40% paid acquisition, stylist posts replacing ad spend, before/afters as Meta creative) — not for a guaranteed viral explosion. The loops pay for themselves without one.</em></p>
+
+  <h2>Stickiness scorecard</h2>
+  <p>Not every piece is equal — some is unbreakable moat, some is copyable in a weekend.</p>
+
+  <div class="card">
+    <div class="legend">
+      <span><span class="dot" style="background:#534AB7;"></span>Moat — can't be copied</span>
+      <span><span class="dot" style="background:#BA7517;"></span>Earns loyalty — hard to leave</span>
+      <span><span class="dot" style="background:#888780;"></span>Copyable — anyone can build</span>
+    </div>
+
+    <div class="bar-row">
+      <div class="bar-head"><span class="name">Outcome photo data over time</span><span class="score" style="color:#534AB7;">10</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:100%; background:#534AB7;"></div></div>
+      <div class="bar-note">Proof of what worked — grows with every user, impossible to scrape</div>
+    </div>
+
+    <div class="bar-row">
+      <div class="bar-head"><span class="name">Stylist knowledge corpus</span><span class="score" style="color:#534AB7;">9</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:90%; background:#534AB7;"></div></div>
+      <div class="bar-note">Lives in stylists' heads — a competitor starts 18 months behind</div>
+    </div>
+
+    <div class="bar-row">
+      <div class="bar-head"><span class="name">AI citation authority for stylists</span><span class="score" style="color:#534AB7;">8</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:80%; background:#534AB7;"></div></div>
+      <div class="bar-note">"ChatGPT cites me" exists nowhere else — leaving means losing it</div>
+    </div>
+
+    <div class="bar-row">
+      <div class="bar-head"><span class="name">Commissions + directory bookings</span><span class="score" style="color:#BA7517;">7</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:70%; background:#BA7517;"></div></div>
+      <div class="bar-note">Recurring money keeps stylists prescribing — but a rival could pay more</div>
+    </div>
+
+    <div class="bar-row">
+      <div class="bar-head"><span class="name">Protocol reminders + coupons</span><span class="score" style="color:#BA7517;">6</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:60%; background:#BA7517;"></div></div>
+      <div class="bar-note">Keeps clients returning weekly — the mechanic is copyable, the timing data isn't</div>
+    </div>
+
+    <div class="bar-row">
+      <div class="bar-head"><span class="name">Public Q&amp;A pages (GEO)</span><span class="score" style="color:#888780;">5</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:50%; background:#888780;"></div></div>
+      <div class="bar-note">Compounds early but the format is copyable — first-mover window matters</div>
+    </div>
+
+    <div class="bar-row" style="margin-bottom:0;">
+      <div class="bar-head"><span class="name">Photo analysis itself</span><span class="score" style="color:#888780;">3</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:30%; background:#888780;"></div></div>
+      <div class="bar-note">Great front door, zero lock-in — ChatGPT does it free</div>
+    </div>
+  </div>
+
+  <h2>The strategic read</h2>
+  <p>The pattern across the scorecard: everything in purple is <em>data that accumulates</em> — and it all comes from the two teal boxes at the top of the flywheel. The gray stuff is what users see and competitors copy; the purple stuff is what they can't take with them when they leave, and can't rebuild without our stylists and our clients' photos.</p>
+
+  <div class="takeaway">
+    <p><strong>In one sentence:</strong> the app's features attract people, but only the contributions make them stay — so every product decision should be judged by whether it increases the rate of voice answers and check-in photos flowing into the private knowledge base.</p>
+  </div>
+
+  <p><strong>Build priority:</strong> the whole left side of the flywheel starts with stylists recording answers. Knowledge capture comes first — everything downstream depends on it.</p>
+
+</div>
+</body>
+</html>
