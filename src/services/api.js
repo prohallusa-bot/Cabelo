@@ -4,12 +4,30 @@
  * Fixed version with proper error handling and user ID passing
  */
 
+import { auth } from './firebase'
+
 // Base URL for Firebase Functions
 // In production, use relative /api paths (routed through Firebase Hosting)
 // In development, use the full Firebase Functions URL
 const FUNCTIONS_BASE_URL = import.meta.env.DEV
   ? 'https://us-central1-cosmeticos-ai.cloudfunctions.net'
   : '/api'
+
+/**
+ * Build request headers, attaching the caller's Firebase ID token when
+ * signed in. The backend derives identity (and guest status) from this
+ * token — without it, requests are treated as guest-tier.
+ */
+const getAuthHeaders = async () => {
+  const headers = { 'Content-Type': 'application/json' }
+  try {
+    const token = await auth.currentUser?.getIdToken()
+    if (token) headers.Authorization = `Bearer ${token}`
+  } catch (err) {
+    console.warn('Could not get auth token:', err)
+  }
+  return headers
+}
 
 /**
  * Full Hair Analysis (4 images)
@@ -22,7 +40,7 @@ export const analyzeHairFull = async (images, userId = null, isGuest = true, qui
 
     const response = await fetch(`${FUNCTIONS_BASE_URL}/analyzeHairFull`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({
         images: imageData,
         userId,
@@ -79,7 +97,7 @@ export const analyzeHairQuick = async (image, userId = null, isGuest = true, qui
 
     const response = await fetch(`${FUNCTIONS_BASE_URL}/analyzeHairQuick`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({
         image: imageData,
         userId,
@@ -124,7 +142,7 @@ export const sendChatMessage = async (message, conversationId = null, userId = n
 
     const response = await fetch(`${FUNCTIONS_BASE_URL}/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({
         message,
         images, // Images are already in { base64, mimeType } format from Chat.jsx
@@ -176,7 +194,7 @@ export const sendChatMessageStream = async (message, conversationId = null, user
     const endpoint = import.meta.env.DEV ? '/chatStreamV2' : '/chatStream'
     const response = await fetch(`${FUNCTIONS_BASE_URL}${endpoint}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({
         message,
         images,
@@ -284,7 +302,9 @@ export const getSharedAnalysis = async (shareId) => {
  */
 export const getUserProfile = async (userId) => {
   try {
-    const response = await fetch(`${FUNCTIONS_BASE_URL}/getUserProfile?userId=${userId}`)
+    const response = await fetch(`${FUNCTIONS_BASE_URL}/getUserProfile?userId=${userId}`, {
+      headers: await getAuthHeaders()
+    })
     const data = await response.json()
     
     if (!response.ok) {
@@ -305,7 +325,7 @@ export const updateUserProfile = async (userId, updates) => {
   try {
     const response = await fetch(`${FUNCTIONS_BASE_URL}/updateUserProfile`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({ userId, updates })
     })
     
@@ -327,7 +347,9 @@ export const updateUserProfile = async (userId, updates) => {
  */
 export const getAnalysisHistory = async (userId, limit = 10) => {
   try {
-    const response = await fetch(`${FUNCTIONS_BASE_URL}/getAnalysisHistory?userId=${userId}&limit=${limit}`)
+    const response = await fetch(`${FUNCTIONS_BASE_URL}/getAnalysisHistory?userId=${userId}&limit=${limit}`, {
+      headers: await getAuthHeaders()
+    })
     const data = await response.json()
     
     if (!response.ok) {
@@ -351,13 +373,13 @@ export const getChatHistory = async (userId, conversationId = null) => {
       url += `&conversationId=${conversationId}`
     }
     
-    const response = await fetch(url)
+    const response = await fetch(url, { headers: await getAuthHeaders() })
     const data = await response.json()
-    
+
     if (!response.ok) {
       throw data
     }
-    
+
     return data
   } catch (error) {
     console.error('Get chat history error:', error)

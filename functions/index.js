@@ -68,6 +68,71 @@ function isEmailAdmin(decoded) {
   );
 }
 
+/**
+ * Resolve the caller's identity for usage limits and personalization.
+ * Registered status requires a valid ID token — body-supplied userId/isGuest
+ * are never trusted on their own (they would let a caller claim another
+ * user's quota or registered-tier limits).
+ */
+async function resolveIdentity(req) {
+  const header = req.headers.authorization || "";
+  const idToken = header.startsWith("Bearer ") ? header.slice(7).trim() : null;
+  if (idToken) {
+    try {
+      const decoded = await admin.auth().verifyIdToken(idToken);
+      return { userId: decoded.uid, isGuest: false };
+    } catch (err) {
+      console.warn("Invalid ID token on AI endpoint, treating caller as guest");
+    }
+  }
+  const forwarded = (req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  const ip = req.ip || forwarded || "unknown";
+  return { userId: `guest_${ip}`, isGuest: true };
+}
+
+// Short-window burst limits (requests per identity per minute) on the
+// expensive AI endpoints, on top of the daily quotas in CONFIG.LIMITS.
+const BURST_LIMITS = { chat: 8, hairAnalysis: 3 };
+
+/**
+ * Fixed-window per-minute rate limit backed by Firestore. Fails open so a
+ * Firestore hiccup can't take the endpoint down. Docs carry expiresAt so a
+ * Firestore TTL policy (collection rateLimits, field expiresAt) cleans up.
+ */
+async function checkBurstLimit(identityId, feature) {
+  const max = BURST_LIMITS[feature];
+  if (!max) return true;
+  const bucket = Math.floor(Date.now() / 60000);
+  const ref = db.collection("rateLimits").doc(`${feature}_${identityId}_${bucket}`);
+  try {
+    return await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const count = snap.exists ? snap.data().count || 0 : 0;
+      if (count >= max) return false;
+      tx.set(ref, {
+        count: count + 1,
+        expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 10 * 60 * 1000),
+      }, { merge: true });
+      return true;
+    });
+  } catch (err) {
+    console.error("Burst limit check failed (failing open):", err.message);
+    return true;
+  }
+}
+
+// Max accepted image payload (decoded bytes), enforced server-side —
+// the frontend's 10MB check is advisory only.
+const MAX_IMAGE_BYTES = CONFIG.MAX_FILE_SIZE_MB * 1024 * 1024;
+
+/** True if every image's base64 payload is within the size limit. */
+function imagesWithinSizeLimit(images) {
+  return images.every((img) => {
+    const b64 = img && img.base64;
+    return typeof b64 === "string" && b64.length * 0.75 <= MAX_IMAGE_BYTES;
+  });
+}
+
 // ============================================
 // SAME-USER VERIFICATION FOR HAIR ANALYSIS
 // ============================================
@@ -132,12 +197,10 @@ exports.chat = functions
           return res.status(405).json({ error: "Method not allowed" });
         }
 
-        const { message, images = [], userId, conversationId, isGuest = true } = req.body;
+        const { message, images = [], conversationId } = req.body;
 
         console.log("Message:", message ? message.substring(0, 50) : "none");
         console.log("Images:", images.length);
-        console.log("UserId:", userId);
-        console.log("IsGuest:", isGuest);
 
         // Validate input
         if ((!message || !message.trim()) && images.length === 0) {
@@ -154,9 +217,26 @@ exports.chat = functions
           });
         }
 
-        // Get effective user ID
-        const guestId = isGuest ? req.ip || `guest_${Date.now()}` : null;
-        const effectiveUserId = userId || guestId;
+        if (images.length > 0 && !imagesWithinSizeLimit(images)) {
+          return res.status(400).json({
+            error: "FILE_TOO_LARGE",
+            message: `Images must be under ${CONFIG.MAX_FILE_SIZE_MB}MB`,
+          });
+        }
+
+        // Identity comes from the verified token, never from the request body
+        const { userId: identityId, isGuest } = await resolveIdentity(req);
+        const userId = isGuest ? null : identityId;
+        const effectiveUserId = identityId;
+        console.log("Identity:", effectiveUserId, "isGuest:", isGuest);
+
+        if (!(await checkBurstLimit(effectiveUserId, "chat"))) {
+          return res.status(429).json({
+            error: "RATE_LIMITED",
+            message: "Too many requests. Please slow down.",
+            isGuest,
+          });
+        }
 
         // Check usage limits
         const usageCheck = await checkUsageLimit(db, effectiveUserId, "chat", isGuest);
@@ -284,7 +364,7 @@ exports.chatStreamV2 = functions
         return;
       }
 
-      const { message, images = [], userId, conversationId, isGuest = true } = req.body;
+      const { message, images = [], conversationId } = req.body;
 
       // Validate input
       if ((!message || !message.trim()) && images.length === 0) {
@@ -293,8 +373,22 @@ exports.chatStreamV2 = functions
         return;
       }
 
-      const guestId = isGuest ? req.ip || `guest_${Date.now()}` : null;
-      const effectiveUserId = userId || guestId;
+      if (images.length > 0 && !imagesWithinSizeLimit(images)) {
+        res.write(`data: ${JSON.stringify({ error: "FILE_TOO_LARGE", message: `Images must be under ${CONFIG.MAX_FILE_SIZE_MB}MB` })}\n\n`);
+        res.end();
+        return;
+      }
+
+      // Identity comes from the verified token, never from the request body
+      const { userId: identityId, isGuest } = await resolveIdentity(req);
+      const userId = isGuest ? null : identityId;
+      const effectiveUserId = identityId;
+
+      if (!(await checkBurstLimit(effectiveUserId, "chat"))) {
+        res.write(`data: ${JSON.stringify({ error: "RATE_LIMITED", message: "Too many requests. Please slow down." })}\n\n`);
+        res.end();
+        return;
+      }
 
       // Check limits
       const usageCheck = await checkUsageLimit(db, effectiveUserId, "chat", isGuest);
@@ -376,11 +470,9 @@ exports.analyzeHairFull = functions
           return res.status(405).json({ error: "Method not allowed" });
         }
 
-        const { images, userId, isGuest = false, quizAnswers = null } = req.body;
+        const { images, quizAnswers = null } = req.body;
 
         console.log("Images count:", images ? images.length : 0);
-        console.log("UserId:", userId);
-        console.log("IsGuest:", isGuest);
         console.log("HasQuiz:", !!quizAnswers);
 
         // Validate images
@@ -391,8 +483,26 @@ exports.analyzeHairFull = functions
           });
         }
 
-        const guestId = isGuest ? req.ip || `guest_${Date.now()}` : null;
-        const effectiveUserId = userId || guestId;
+        if (!imagesWithinSizeLimit(images)) {
+          return res.status(400).json({
+            error: "FILE_TOO_LARGE",
+            message: `Images must be under ${CONFIG.MAX_FILE_SIZE_MB}MB`,
+          });
+        }
+
+        // Identity comes from the verified token, never from the request body
+        const { userId: identityId, isGuest } = await resolveIdentity(req);
+        const userId = isGuest ? null : identityId;
+        const effectiveUserId = identityId;
+        console.log("Identity:", effectiveUserId, "isGuest:", isGuest);
+
+        if (!(await checkBurstLimit(effectiveUserId, "hairAnalysis"))) {
+          return res.status(429).json({
+            error: "RATE_LIMITED",
+            message: "Too many requests. Please slow down.",
+            isGuest,
+          });
+        }
 
         // Check limits
         const usageCheck = await checkUsageLimit(db, effectiveUserId, "hairAnalysis", isGuest);
@@ -486,11 +596,9 @@ exports.analyzeHairQuick = functions
           return res.status(405).json({ error: "Method not allowed" });
         }
 
-        const { image, userId, isGuest = true, quizAnswers = null } = req.body;
+        const { image, quizAnswers = null } = req.body;
 
         console.log("Image received:", image ? "yes" : "no");
-        console.log("UserId:", userId);
-        console.log("IsGuest:", isGuest);
         console.log("HasQuiz:", !!quizAnswers);
 
         if (!image || !image.base64) {
@@ -500,8 +608,26 @@ exports.analyzeHairQuick = functions
           });
         }
 
-        const guestId = isGuest ? req.ip || `guest_${Date.now()}` : null;
-        const effectiveUserId = userId || guestId;
+        if (!imagesWithinSizeLimit([image])) {
+          return res.status(400).json({
+            error: "FILE_TOO_LARGE",
+            message: `Image must be under ${CONFIG.MAX_FILE_SIZE_MB}MB`,
+          });
+        }
+
+        // Identity comes from the verified token, never from the request body
+        const { userId: identityId, isGuest } = await resolveIdentity(req);
+        const userId = isGuest ? null : identityId;
+        const effectiveUserId = identityId;
+        console.log("Identity:", effectiveUserId, "isGuest:", isGuest);
+
+        if (!(await checkBurstLimit(effectiveUserId, "hairAnalysis"))) {
+          return res.status(429).json({
+            error: "RATE_LIMITED",
+            message: "Too many requests. Please slow down.",
+            isGuest,
+          });
+        }
 
         // Check limits
         const usageCheck = await checkUsageLimit(db, effectiveUserId, "hairAnalysis", isGuest);
@@ -905,8 +1031,11 @@ exports.sendInactiveUserNotifications = functions.pubsub
 
       console.log("Looking for users inactive since:", cutoffDate.toISOString());
 
-      // Get all users
-      const usersSnapshot = await db.collection("users").get();
+      // Only fetch users who can actually receive a push — avoids scanning
+      // the whole collection every day as the user base grows
+      const usersSnapshot = await db.collection("users")
+        .where("fcmToken", "!=", null)
+        .get();
 
       const notifications = [];
       const notificationLogs = [];
@@ -1101,7 +1230,9 @@ exports.triggerNotificationsManually = functions.https.onRequest((req, res) => {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - inactiveDays);
 
-      const usersSnapshot = await db.collection("users").get();
+      const usersSnapshot = await db.collection("users")
+        .where("fcmToken", "!=", null)
+        .get();
       let inactiveCount = 0;
 
       usersSnapshot.forEach((doc) => {
