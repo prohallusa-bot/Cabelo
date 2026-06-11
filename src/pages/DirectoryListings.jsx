@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from '../lib/motion'
 import { useLanguage } from '../context/LanguageContext'
 import {
   ArrowLeft, Search, MapPin, Star, Phone, Globe, MessageCircle,

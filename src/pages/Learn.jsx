@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion } from '../lib/motion'
 import { useLanguage } from '../context/LanguageContext'
 import { getBlogPosts } from '../services/firebase'
 import { 

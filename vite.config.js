@@ -8,4 +8,15 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  build: {
+    target: 'es2020',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+        },
+      },
+    },
+  },
 })

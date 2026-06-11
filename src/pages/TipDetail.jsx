@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion } from '../lib/motion'
 import { useLanguage } from '../context/LanguageContext'
 import { ArrowLeft, Bookmark, Share2, Clock, Sparkles, ChevronRight, Droplets, Sun, Shield, Scissors } from 'lucide-react'
 

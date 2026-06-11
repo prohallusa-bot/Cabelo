@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from '../../lib/motion'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { X, Check, Sparkles, Mail, Lock, User, Eye, EyeOff, Phone, MapPin, Bell, ChevronDown } from 'lucide-react'

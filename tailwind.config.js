@@ -74,10 +74,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-        display: ['SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+        display: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         serif: ['Instrument Serif', 'Georgia', 'Times New Roman', 'serif'],
-        body: ['DM Sans', 'sans-serif'],
+        body: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       boxShadow: {
         'clean': '0 1px 3px rgba(0,0,0,0.06)',

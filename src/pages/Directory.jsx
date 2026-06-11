@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion } from '../lib/motion'
 import { useLanguage } from '../context/LanguageContext'
 import { Scissors, Building2, MapPin, Users, Star, Search, Navigation, Loader2, XCircle, Sparkles } from 'lucide-react'
 

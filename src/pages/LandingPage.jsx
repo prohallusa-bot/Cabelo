@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion } from '../lib/motion'
 import { useAuth } from '../context/AuthContext'
 import LoginPrompt from '../components/auth/LoginPrompt'
 import { Sparkles, Camera, MessageCircle, BookOpen, MapPin, Search, Compass, Send } from 'lucide-react'
