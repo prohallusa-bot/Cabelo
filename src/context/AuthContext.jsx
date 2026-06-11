@@ -16,6 +16,18 @@ import {
 
 const AuthContext = createContext()
 
+// Safely parse JSON from localStorage; clears the key if it's corrupt.
+const safeParse = (key, fallback = null) => {
+  const raw = localStorage.getItem(key)
+  if (!raw) return fallback
+  try {
+    return JSON.parse(raw)
+  } catch {
+    localStorage.removeItem(key)
+    return fallback
+  }
+}
+
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
@@ -38,25 +50,29 @@ export const AuthProvider = ({ children }) => {
     // Check localStorage for guests
     return localStorage.getItem('guestQuizCompleted') === 'true'
   })
-  const [quizAnswers, setQuizAnswers] = useState(() => {
-    const saved = localStorage.getItem('guestQuizAnswers')
-    return saved ? JSON.parse(saved) : null
-  })
+  const [quizAnswers, setQuizAnswers] = useState(() => safeParse('guestQuizAnswers', null))
 
   const GUEST_MESSAGE_LIMIT = 5
 
   useEffect(() => {
+    let isMounted = true
+
     // Pre-load admin emails from Firestore to populate cache
     getAdminEmails().catch(console.error)
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return
       setUser(user)
 
       if (user) {
         try {
-          const data = await getUserData(user.uid)
+          // Independent reads/writes run in parallel
+          const [data] = await Promise.all([
+            getUserData(user.uid),
+            updateUserStreak(user.uid),
+          ])
+          if (!isMounted) return
           setUserData(data)
-          await updateUserStreak(user.uid)
 
           // Sync quiz status from user data
           if (data?.quiz === true) {
@@ -64,14 +80,14 @@ export const AuthProvider = ({ children }) => {
             setQuizAnswers(data.quizAnswers || null)
           } else if (localStorage.getItem('guestQuizCompleted') === 'true') {
             // Migrate guest quiz to user account
-            const guestAnswers = localStorage.getItem('guestQuizAnswers')
-            if (guestAnswers) {
-              const answers = JSON.parse(guestAnswers)
+            const answers = safeParse('guestQuizAnswers', null)
+            if (answers) {
               await updateUserData(user.uid, {
                 quiz: true,
                 quizAnswers: answers,
                 quizCompletedAt: new Date().toISOString()
               })
+              if (!isMounted) return
               setQuizCompleted(true)
               setQuizAnswers(answers)
               // Clear guest quiz data
@@ -88,15 +104,17 @@ export const AuthProvider = ({ children }) => {
         const guestCompleted = localStorage.getItem('guestQuizCompleted') === 'true'
         setQuizCompleted(guestCompleted)
         if (guestCompleted) {
-          const saved = localStorage.getItem('guestQuizAnswers')
-          setQuizAnswers(saved ? JSON.parse(saved) : null)
+          setQuizAnswers(safeParse('guestQuizAnswers', null))
         }
       }
 
-      setLoading(false)
+      if (isMounted) setLoading(false)
     })
 
-    return () => unsubscribe()
+    return () => {
+      isMounted = false
+      unsubscribe()
+    }
   }, [])
 
   useEffect(() => {

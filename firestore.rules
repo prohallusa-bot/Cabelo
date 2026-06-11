@@ -1,18 +1,29 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Admin email list - UPDATE THIS with your admin emails
+    // Admin status is derived from the auth token (custom claim or known
+    // email), never from a user-writable Firestore field.
     function isAdmin() {
       return request.auth != null && (
+        request.auth.token.admin == true ||
         request.auth.token.email == 'admin@cabelo.ai' ||
         request.auth.token.email == 'prohallusa@gmail.com'
       );
     }
 
+    // A non-admin may write their own doc but must not grant themselves
+    // admin: the resulting doc may only carry isAdmin == true for a real admin.
+    function noAdminEscalation() {
+      return isAdmin() || request.resource.data.get('isAdmin', false) == false;
+    }
+
     // Users collection - admins can read all, users can read/write own
     match /users/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
-      allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create, update: if request.auth != null
+        && (request.auth.uid == userId || isAdmin())
+        && noAdminEscalation();
+      allow delete: if request.auth != null && (request.auth.uid == userId || isAdmin());
 
       // User's analyses subcollection
       match /analyses/{analysisId} {

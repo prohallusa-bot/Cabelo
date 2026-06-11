@@ -32,6 +32,43 @@ const {
 const { chatWithRAG, analyzeWithRAG, streamChatWithRAG } = require("./vertexAI");
 
 // ============================================
+// AUTH HELPERS
+// ============================================
+
+const ADMIN_EMAILS = ["admin@cabelo.ai", "prohallusa@gmail.com"];
+
+/**
+ * Verify the caller's Firebase ID token (Authorization: Bearer <token>).
+ * On failure, sends a 401 response and returns null so callers can `return`.
+ */
+async function verifyAuthToken(req, res) {
+  const header = req.headers.authorization || "";
+  const idToken = header.startsWith("Bearer ") ? header.slice(7).trim() : null;
+  if (!idToken) {
+    res.status(401).json({ error: "UNAUTHORIZED", message: "Authentication required" });
+    return null;
+  }
+  try {
+    return await admin.auth().verifyIdToken(idToken);
+  } catch (err) {
+    res.status(401).json({ error: "UNAUTHORIZED", message: "Invalid or expired token" });
+    return null;
+  }
+}
+
+/**
+ * True if the decoded token belongs to an admin (custom claim or known email).
+ * Email/claims come from Firebase Auth and cannot be spoofed by writing to
+ * a user's own Firestore document.
+ */
+function isEmailAdmin(decoded) {
+  return !!decoded && (
+    decoded.admin === true ||
+    ADMIN_EMAILS.includes((decoded.email || "").toLowerCase())
+  );
+}
+
+// ============================================
 // SAME-USER VERIFICATION FOR HAIR ANALYSIS
 // ============================================
 
@@ -615,9 +652,12 @@ exports.getUserProfile = functions.https.onRequest((req, res) => {
         return res.status(405).json({ error: "Method not allowed" });
       }
 
-      const userId = req.query.userId;
-      if (!userId) {
-        return res.status(400).json({ error: "User ID required" });
+      const decoded = await verifyAuthToken(req, res);
+      if (!decoded) return;
+
+      const userId = req.query.userId || decoded.uid;
+      if (userId !== decoded.uid && !isEmailAdmin(decoded)) {
+        return res.status(403).json({ error: "FORBIDDEN" });
       }
 
       const userDoc = await db.collection("users").doc(userId).get();
@@ -676,10 +716,13 @@ exports.updateUserProfile = functions.https.onRequest((req, res) => {
         return res.status(405).json({ error: "Method not allowed" });
       }
 
-      const { userId, updates } = req.body;
+      const decoded = await verifyAuthToken(req, res);
+      if (!decoded) return;
 
-      if (!userId) {
-        return res.status(400).json({ error: "User ID required" });
+      const { userId: bodyUserId, updates } = req.body;
+      const userId = bodyUserId || decoded.uid;
+      if (userId !== decoded.uid && !isEmailAdmin(decoded)) {
+        return res.status(403).json({ error: "FORBIDDEN" });
       }
 
       const allowedFields = ["displayName", "language", "settings"];
@@ -710,11 +753,14 @@ exports.getAnalysisHistory = functions.https.onRequest((req, res) => {
         return res.status(405).json({ error: "Method not allowed" });
       }
 
-      const userId = req.query.userId;
+      const decoded = await verifyAuthToken(req, res);
+      if (!decoded) return;
+
+      const userId = req.query.userId || decoded.uid;
       const limitParam = parseInt(req.query.limit) || 10;
 
-      if (!userId) {
-        return res.status(400).json({ error: "User ID required" });
+      if (userId !== decoded.uid && !isEmailAdmin(decoded)) {
+        return res.status(403).json({ error: "FORBIDDEN" });
       }
 
       const snapshot = await db
@@ -747,11 +793,14 @@ exports.getChatHistory = functions.https.onRequest((req, res) => {
         return res.status(405).json({ error: "Method not allowed" });
       }
 
-      const userId = req.query.userId;
+      const decoded = await verifyAuthToken(req, res);
+      if (!decoded) return;
+
+      const userId = req.query.userId || decoded.uid;
       const conversationId = req.query.conversationId;
 
-      if (!userId) {
-        return res.status(400).json({ error: "User ID required" });
+      if (userId !== decoded.uid && !isEmailAdmin(decoded)) {
+        return res.status(403).json({ error: "FORBIDDEN" });
       }
 
       if (conversationId) {
@@ -1025,18 +1074,16 @@ exports.triggerNotificationsManually = functions.https.onRequest((req, res) => {
         return res.status(405).json({ error: "Method not allowed" });
       }
 
-      const { userId } = req.body;
+      // Admin status comes from the verified token (custom claim or known
+      // email), NOT from a Firestore field a user could write to their own doc.
+      const decoded = await verifyAuthToken(req, res);
+      if (!decoded) return;
 
-      if (!userId) {
-        return res.status(401).json({ error: "User ID required" });
-      }
-
-      // Check if user is admin
-      const userDoc = await db.collection("users").doc(userId).get();
-      if (!userDoc.exists || !userDoc.data().isAdmin) {
+      if (!isEmailAdmin(decoded)) {
         return res.status(403).json({ error: "Admin access required" });
       }
 
+      const userId = decoded.uid;
       console.log("Manually triggering notification job by admin:", userId);
 
       // Get notification settings and inactive users count

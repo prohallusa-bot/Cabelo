@@ -30,8 +30,14 @@ const MarkdownRenderer = ({ content, className = '' }) => {
     html = html.replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>')
     html = html.replace(/_([^_]+)_/g, '<em class="italic">$1</em>')
     
-    // Links [text](url)
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary-dark">$1</a>')
+    // Links [text](url) — only allow safe URL schemes so a crafted link
+    // like [x](javascript:...) can't execute. Unsafe URLs render as plain text.
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+      const safe = /^(https?:|mailto:|\/|#)/i.test(url.trim())
+      return safe
+        ? `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary-dark">${text}</a>`
+        : text
+    })
     
     // Headers (## Header)
     html = html.replace(/^### (.+)$/gm, '<h3 class="font-bold text-base mt-3 mb-1">$1</h3>')
@@ -39,7 +45,7 @@ const MarkdownRenderer = ({ content, className = '' }) => {
     html = html.replace(/^# (.+)$/gm, '<h1 class="font-bold text-xl mt-3 mb-2">$1</h1>')
     
     // Unordered lists (- item or * item)
-    html = html.replace(/^[\-\*] (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+    html = html.replace(/^[-*] (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
     
     // Numbered lists (1. item)
     html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
